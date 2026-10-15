@@ -41,7 +41,10 @@
     if (visuals) sections.push('ETAPA 2 · FOTOGRAFÍAS Y FLYER\nContinúa en el mismo chat usando las referencias y el análisis de la etapa 1. Conserva el nombre y los textos que yo haya aprobado allí; no propongas nuevos nombres ni reescribas la descripción. No asumas que hubo aprobación: si faltan decisiones indispensables o textos aprobados para una imagen, pídemelos antes de producirla.');
     if (clean(templates.base)) sections.push(templates.base);
     const tasks = [analysis && 'análisis del producto y sus referencias', includeTexts && 'nombres y textos comerciales', includePhotos && 'fotografías mejoradas', includeFlyer && 'un flyer promocional'];
-    sections.push(`OBJETIVO Y DESTINO\nPreparar ${tasks.filter(Boolean).join(', ')} para ${platformNames[d.platform]} · ${destination[0]}.\n${destination[1]}`);
+    const format = visuals && d.destination === 'reel'
+      ? 'Formato vertical 9:16 para fotografías o portada del Reel. El guion y los textos corresponden a la etapa 1. No prometas generar un video.'
+      : destination[1];
+    sections.push(`OBJETIVO Y DESTINO\nPreparar ${tasks.filter(Boolean).join(', ')} para ${platformNames[d.platform]} · ${destination[0]}.\n${format}`);
     const facts = [];
     const add = (label, value) => { if (clean(value)) facts.push(`${label}: ${clean(value)}`); };
     add('Producto o servicio', d.product); add('Nombre actual', d.currentName); add('Características y personalización', d.features); add('Precio del producto', money(d.price)); add('Público objetivo', d.audience); add('Entrega o despacho confirmado', d.delivery); add('Observaciones', d.notes);

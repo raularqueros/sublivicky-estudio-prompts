@@ -46,6 +46,18 @@ Archivos:
 - `app.js`: interacciones, protección de ediciones, copia y guardado local.
 - `verify.cjs`: comprobaciones dirigidas sin dependencias; ejecutar con `node verify.cjs` si tienes Node.js. Node.js no es necesario para usar la app.
 
-Verificación realizada: sintaxis JavaScript y 80 comprobaciones locales, incluyendo 84 combinaciones de plataforma, destino y tareas para las dos etapas. Se comprobaron los prompts separados, las ediciones y persistencia independientes, la casilla visible de escena y su activación/desactivación sin perder texto, el contexto libre, la guía de marketing y entrega para Instagram, la adaptación a tareas seleccionadas, los requisitos del flyer solo en etapa 2, la copia sin precio, la apertura sin detenerse por fallos de copia, el campo temporal y su limpieza, la selección manual por petición, el enlace móvil, configuración y plantillas. Los eventos del DOM, la copia y la apertura de enlaces se simulan en estas comprobaciones. No se verificaron la copia ni la apertura real de la app en un iPhone; requieren probar en el dispositivo. La herramienta de navegador bloqueó la vista previa; tampoco se verificaron visualmente el diseño móvil ni el recorrido real con teclado. La calidad del copy que produzca ChatGPT se evalúa allí; esta app compone las instrucciones.
+El diseño incluye navegación directa al formulario y al prompt, foco visible, controles táctiles amplios y campos de al menos 16 px. Si cierras configuración o plantillas con cambios sin guardar, se pide confirmación. La etapa activa se refleja en `?stage=analysis` o `?stage=visuals`; los datos del producto no se incluyen en la URL.
+
+Verificación realizada: sintaxis JavaScript y **81 comprobaciones locales**, incluyendo 84 combinaciones de plataforma, destino y tareas para las dos etapas. Además, **34 comprobaciones de flujo en navegador real Edge/Chromium**, en escritorio y móvil emulado, comprobaron copia al portapapeles, navegación, teclado, escenas, formularios, requisitos del flyer sin precio, persistencia y protección de ediciones. Los enlaces a ChatGPT se interceptan durante las pruebas, sin enviar mensajes. axe-core no detectó infracciones en los estados examinados; no hubo errores JavaScript ni desbordamiento horizontal en 1366, 390, 320 y 844 px de ancho. Se inspeccionaron capturas de esos tamaños.
+
+El [informe de diseño y calidad](docs/quality-review.md) detalla las correcciones y los límites de las pruebas. No se verificaron Safari en un iPhone físico ni la apertura de la app nativa; requieren probar en el dispositivo. La revisión automática de accesibilidad no equivale a una certificación WCAG. La calidad del copy que produzca ChatGPT se evalúa allí; esta app compone las instrucciones.
+
+Para repetir las pruebas del navegador, instala Playwright de Python en un entorno de desarrollo separado y ten Microsoft Edge disponible. Inicia el servidor local y ejecuta:
+
+```sh
+python qa/browser_check.py --full --url http://127.0.0.1:8000/ --output artifacts/qa/local
+```
+
+Agrega `--axe RUTA/axe.min.js` para ejecutar también la revisión automatizada de accesibilidad con una copia local de axe-core. Las pruebas generan capturas y un informe JSON en la carpeta indicada, que Git ignora. Ninguna de estas herramientas es necesaria para usar o publicar la app.
 
 No hay backend ni dependencias. GitHub Pages publica los archivos estáticos desde la raíz de la rama `main`; `.nojekyll` evita su procesamiento con Jekyll. Para actualizar la web, sube los cambios a `main`.

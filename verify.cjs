@@ -92,6 +92,8 @@ function boot({ storageBlocked = false } = {}) {
   check('Escena vacía no agrega contexto inventado al prompt', () => assert.ok(!withoutScene.includes('ESCENA O CONTEXTO CREATIVO')));
   const storyCopy = c.SubliPrompt.compose({ ...textFixture, destination:'story' }, {}, c.SubliPrompt.defaults);
   const reelCopy = c.SubliPrompt.compose({ ...textFixture, destination:'reel' }, {}, c.SubliPrompt.defaults);
+  const reelVisuals = c.SubliPrompt.compose({ ...textFixture, destination:'reel', photos:true }, {}, c.SubliPrompt.defaults, 'visuals');
+  check('Imágenes de Reel mantienen el guion en la etapa 1', () => { assert.ok(reelVisuals.includes('fotografías o portada del Reel')); assert.ok(reelVisuals.includes('El guion y los textos corresponden a la etapa 1')); assert.ok(!reelVisuals.includes('Guion vertical')); });
   const facebookCopy = c.SubliPrompt.compose({ ...textFixture, platform:'facebook' }, {}, c.SubliPrompt.defaults);
   check('Copy listo para publicar respeta historia, Reel y otras plataformas', () => { assert.ok(storyCopy.includes('no lo conviertas en un pie de foto largo')); assert.ok(reelCopy.includes('apartado separado del pie de foto')); assert.ok(reelCopy.includes('No prometas generar un video')); assert.ok(!facebookCopy.includes('ENTREGA LISTA PARA INSTAGRAM')); });
   const visualOnly = c.SubliPrompt.compose({ ...textFixture, texts:false, photos:true, scene:freeScene }, {}, c.SubliPrompt.defaults);

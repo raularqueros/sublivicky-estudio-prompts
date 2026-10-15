@@ -61,6 +61,19 @@
       }
     }
   } catch { storageWarning(); }
+  // Solo la etapa se comparte en la URL; los datos del producto permanecen en el navegador.
+  if (window.location?.href) {
+    const requestedStage = new URL(window.location.href).searchParams.get('stage');
+    if (['analysis','visuals'].includes(requestedStage) && requestedStage !== activeStage && (requestedStage !== 'visuals' || draft.photos || draft.flyer)) {
+      stageStates[activeStage] = { prompt:storedPrompt, manual, lastGenerated, dismissedCandidate };
+      activeStage = requestedStage;
+      const entry = stageStates[activeStage];
+      storedPrompt = entry?.prompt || '';
+      manual = entry?.manual === true;
+      lastGenerated = entry?.lastGenerated || '';
+      dismissedCandidate = entry?.dismissedCandidate ?? null;
+    }
+  }
   // Recupera también campos con datos de borradores anteriores a este selector.
   for (const key of optionalKeys) if (draft[key].trim()) optionalSelection.add(key);
   if (!hasSavedSceneToggle) draft.sceneEnabled = !!draft.scene.trim();
@@ -98,6 +111,7 @@
     $('stage-analysis').setAttribute('aria-pressed', String(activeStage === 'analysis'));
     $('stage-visuals').setAttribute('aria-pressed', String(activeStage === 'visuals'));
     $('stage-visuals').disabled = !(draft.photos || draft.flyer);
+    $('visuals-help').hidden = draft.photos || draft.flyer;
     $('stage-help').textContent = activeStage === 'analysis'
       ? 'Pega este primer prompt en ChatGPT y adjunta las fotos originales. Revisa y aprueba las propuestas allí. Después prepara el prompt 2 en este mismo chat. Si solo necesitas textos, termina en esta etapa.'
       : 'Usa este segundo prompt después de aprobar los textos en ChatGPT. Se conserva el nombre elegido; no se vuelve a redactar la descripción. Completa aquí los datos confirmados del flyer si lo seleccionaste.';
@@ -166,6 +180,11 @@
     if (!manual) { $('prompt').value = candidate; lastGenerated = candidate; dismissedCandidate = null; }
     $('edit-conflict').hidden = !(manual && candidate !== lastGenerated && candidate !== dismissedCandidate);
     updateMeta();
+    if (window.location?.href && window.history?.replaceState) {
+      const url = new URL(window.location.href);
+      url.searchParams.set('stage', activeStage);
+      window.history.replaceState(null, '', url.pathname + url.search + url.hash);
+    }
     persist();
   }
   renderDestinations();
@@ -201,6 +220,7 @@
     $('product-error').hidden = true;
     $('product').removeAttribute('aria-invalid');
     $('tasks-error').hidden = true;
+    $('texts').removeAttribute('aria-invalid');
     clearFlyerErrors();
     $('chatgpt-fallback').hidden = true;
     notify('');
@@ -231,7 +251,7 @@
       notify('Falta la descripción básica del producto. Tu edición del prompt se conserva.');
       return false;
     }
-    if (!(draft.texts || draft.photos || draft.flyer)) { $('tasks-error').hidden = false; $('texts').focus(); notify('Elige el contenido que necesitas.'); return false; }
+    if (!(draft.texts || draft.photos || draft.flyer)) { $('tasks-error').hidden = false; $('texts').setAttribute('aria-invalid','true'); $('texts').focus(); notify('Elige el contenido que necesitas.'); return false; }
     return validateFlyer();
   }
   $('update-prompt').addEventListener('click', () => {
@@ -353,5 +373,17 @@
   }
   $('template-restore').addEventListener('click', restoreTemplates);
   $('dialog-restore').addEventListener('click', restoreTemplates);
-  document.querySelectorAll('[data-close]').forEach(button => button.addEventListener('click', () => $(button.dataset.close).close()));
+  function hasDialogChanges(id) {
+    if (id === 'settings-dialog') return $('chatgptUrl').value.trim() !== config.url || $('businessContact').value.trim() !== config.contact || $('businessLocation').value.trim() !== config.location || $('businessDetails').value.trim() !== config.details;
+    return Object.keys(defaults).some(key => $('template-' + key).value.trim() !== templates[key]);
+  }
+  function closeDialog(id) {
+    if (hasDialogChanges(id) && !window.confirm('Tienes cambios sin guardar. ¿Quieres descartarlos y cerrar?')) return;
+    $(id).close();
+  }
+  document.querySelectorAll('[data-close]').forEach(button => button.addEventListener('click', () => closeDialog(button.dataset.close)));
+  for (const id of ['settings-dialog','template-dialog']) $(id).addEventListener('cancel', event => { event.preventDefault(); closeDialog(id); });
+  window.addEventListener?.('beforeunload', event => {
+    if (['settings-dialog','template-dialog'].some(id => $(id).open && hasDialogChanges(id))) { event.preventDefault(); event.returnValue = ''; }
+  });
 })();
